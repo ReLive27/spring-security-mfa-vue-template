@@ -49,6 +49,64 @@
       </div>
 
     </el-form>
+
+    <el-dialog title="动态口令认证" :visible.sync="dialogTableVisible" @close="handleDialogClose">
+      <el-steps :active="active" finish-status="success">
+        <el-step title="下载应用"></el-step>
+        <el-step title="绑定账号"></el-step>
+        <el-step title="验证账号"></el-step>
+      </el-steps>
+
+     <div>
+       <div class="info" v-if="active === 1">
+         <div>
+           <p>当前账号未绑定令牌APP，请前往各应用市场下载并安装令牌APP，推荐下载Google身份验证器进行认证操作。</p>
+           <img src="@/assets/images/google-auth.png" style="width: 100px;height: 100px;border-radius: 10px;">
+         </div>
+         <el-button style="margin-top: 12px;" @click="next">下一步</el-button>
+       </div>
+
+       <div class="info" v-if="active === 2">
+         <img v-bind:src="qrCode"/>
+         <p>请使用令牌APP进行扫码绑定</p>
+         <el-button style="margin-top: 12px;" @click="next">下一步</el-button>
+       </div>
+
+       <div class="info" v-if="active === 3">
+         <p>请输入动态口令</p>
+         <el-input
+           :key="passwordType"
+           v-model="loginForm.code"
+           :type="passwordType"
+           placeholder="请输入动态口令"
+           name="code"
+           tabindex="2"
+           auto-complete="on"
+           style="border-radius: 5px;background-color: #d3dce6"
+         />
+         <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;margin-top: 10px" @click.native.prevent="handleLogin">确定</el-button>
+       </div>
+     </div>
+    </el-dialog>
+
+    <el-dialog title="动态口令认证" :visible.sync="dialogDynamicPasswordVisible" @close="handleDialogClose">
+      <div class="info">
+        <p>请输入动态口令</p>
+          <el-input
+            :key="passwordType"
+            v-model="loginForm.code"
+            :type="passwordType"
+            placeholder="请输入动态口令"
+            name="code"
+            tabindex="2"
+            auto-complete="on"
+            style="border-radius: 5px;background-color: #d3dce6"
+          />
+        <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;margin-top: 10px" @click.native.prevent="handleLogin">确定</el-button>
+      </div>
+
+    </el-dialog>
+
   </div>
 </template>
 
@@ -75,20 +133,25 @@ export default {
     return {
       loginForm: {
         username: 'admin',
-        password: 'password'
+        password: 'password',
+        code: ''
       },
       loginRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
+        username: [{required: true, trigger: 'blur', validator: validateUsername}],
+        password: [{required: true, trigger: 'blur', validator: validatePassword}]
       },
       loading: false,
       passwordType: 'password',
-      redirect: undefined
+      redirect: undefined,
+      active: 1,
+      dialogTableVisible: false,
+      dialogDynamicPasswordVisible: false,
+      qrCode: '',
     }
   },
   watch: {
     $route: {
-      handler: function(route) {
+      handler: function (route) {
         this.redirect = route.query && route.query.redirect
       },
       immediate: true
@@ -109,8 +172,16 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then(() => {
-            this.$router.push({ path: this.redirect || '/' })
+          this.$store.dispatch('user/login', this.loginForm).then((res) => {
+            if(!res.token && res.mfa === 'bind') {
+              this.qrCode = res.qrCode
+              this.active = 1
+              this.dialogTableVisible = true
+            }
+            if(!res.token && res.mfa === 'enable') {
+              this.dialogDynamicPasswordVisible = true
+            }
+            this.$router.push({path: this.redirect || '/'})
             this.loading = false
           }).catch(() => {
             this.loading = false
@@ -120,6 +191,12 @@ export default {
           return false
         }
       })
+    },
+    next() {
+      if (this.active++ > 3) this.active = 1;
+    },
+    handleDialogClose(){
+      this.loginForm.code = ''
     }
   }
 }
@@ -129,8 +206,8 @@ export default {
 /* 修复input 背景不协调 和光标变色 */
 /* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
 
-$bg:#283443;
-$light_gray:#fff;
+$bg: #283443;
+$light_gray: #fff;
 $cursor: #fff;
 
 @supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
@@ -173,9 +250,9 @@ $cursor: #fff;
 </style>
 
 <style lang="scss" scoped>
-$bg:#2d3a4b;
-$dark_gray:#889aa4;
-$light_gray:#eee;
+$bg: #2d3a4b;
+$dark_gray: #889aa4;
+$light_gray: #eee;
 
 .login-container {
   min-height: 100%;
