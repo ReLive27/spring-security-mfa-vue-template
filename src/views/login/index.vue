@@ -61,37 +61,49 @@
        <div class="info" v-if="active === 1">
          <div>
            <p>当前账号未绑定令牌APP，请前往各应用市场下载并安装令牌APP，推荐下载Google身份验证器进行认证操作。</p>
-           <img src="@/assets/images/google-auth.png" style="width: 100px;height: 100px;border-radius: 10px;">
+           <div style="text-align: center;">
+             <img src="@/assets/images/google-auth.png" style="width: 100px;height: 100px;border-radius: 10px;">
+           </div>
          </div>
-         <el-button style="margin-top: 12px;" @click="next">下一步</el-button>
+         <div style="text-align: right; margin: 0">
+           <el-button style="margin-top: 12px;" @click="next">下一步</el-button>
+         </div>
        </div>
 
        <div class="info" v-if="active === 2">
-         <img v-bind:src="qrCode"/>
          <p>请使用令牌APP进行扫码绑定</p>
-         <el-button style="margin-top: 12px;" @click="next">下一步</el-button>
+         <div style="text-align: center;">
+           <img v-bind:src="qrCode" style="margin: 0 auto"/>
+         </div>
+         <div style="text-align: right; margin: 0">
+           <el-button style="margin-top: 12px;" @click="previous">上一步</el-button>
+           <el-button style="margin-top: 12px;" @click="next">下一步</el-button>
+         </div>
        </div>
 
        <div class="info" v-if="active === 3">
-         <p>请输入动态口令</p>
-         <el-input
-           :key="passwordType"
-           v-model="loginForm.code"
-           :type="passwordType"
-           placeholder="请输入动态口令"
-           name="code"
-           tabindex="2"
-           auto-complete="on"
-           style="border-radius: 5px;background-color: #d3dce6"
-         />
-         <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;margin-top: 10px" @click.native.prevent="handleLogin">确定</el-button>
+         <div style="text-align: center; margin: 20px auto">
+           <el-input
+             :key="passwordType"
+             v-model="loginForm.code"
+             :type="passwordType"
+             placeholder="请输入动态口令"
+             name="code"
+             tabindex="2"
+             auto-complete="on"
+             style="width: 50%"
+           />
+         </div>
+         <div style="text-align: right; margin: 0">
+           <el-button style="margin-top: 12px;" @click="previous">上一步</el-button>
+           <el-button :loading="loading" type="primary" style="margin-top: 12px;" @click.native.prevent="handleLogin">确定</el-button>
+         </div>
        </div>
      </div>
     </el-dialog>
 
-    <el-dialog title="动态口令认证" :visible.sync="dialogDynamicPasswordVisible" @close="handleDialogClose">
-      <div class="info">
-        <p>请输入动态口令</p>
+    <el-dialog title="动态口令认证" :visible.sync="dialogDynamicPasswordVisible" width="30%" @close="handleDialogClose">
+      <div class="info" style="width: 70%;margin: 0 auto">
           <el-input
             :key="passwordType"
             v-model="loginForm.code"
@@ -100,7 +112,6 @@
             name="code"
             tabindex="2"
             auto-complete="on"
-            style="border-radius: 5px;background-color: #d3dce6"
           />
         <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;margin-top: 10px" @click.native.prevent="handleLogin">确定</el-button>
       </div>
@@ -130,6 +141,13 @@ export default {
         callback()
       }
     }
+    const validateCode = (rule, value, callback) => {
+      if (value.length < 6) {
+        callback(new Error('The code can not be less than 6 digits'))
+      } else {
+        callback()
+      }
+    }
     return {
       loginForm: {
         username: 'admin',
@@ -138,7 +156,8 @@ export default {
       },
       loginRules: {
         username: [{required: true, trigger: 'blur', validator: validateUsername}],
-        password: [{required: true, trigger: 'blur', validator: validatePassword}]
+        password: [{required: true, trigger: 'blur', validator: validatePassword}],
+        code: [{required: true, trigger: 'blur', validator: validateCode}]
       },
       loading: false,
       passwordType: 'password',
@@ -195,6 +214,9 @@ export default {
     next() {
       if (this.active++ > 3) this.active = 1;
     },
+    previous() {
+      this.active--
+    },
     handleDialogClose(){
       this.loginForm.code = ''
     }
@@ -218,10 +240,45 @@ $cursor: #fff;
 
 /* reset element-ui css */
 .login-container {
+  .login-form {
+
+    .el-input {
+      display: inline-block;
+      height: 47px;
+      width: 85%;
+
+      input {
+        background: transparent;
+        border: 0px;
+        -webkit-appearance: none;
+        border-radius: 0px;
+        padding: 12px 5px 12px 15px;
+        color: $light_gray;
+        height: 47px;
+        caret-color: $cursor;
+
+        &:-webkit-autofill {
+          box-shadow: 0 0 0px 1000px $bg inset !important;
+          -webkit-text-fill-color: $cursor !important;
+        }
+      }
+    }
+
+    .el-form-item {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      color: #454545;
+    }
+  }
+}
+
+.info {
   .el-input {
     display: inline-block;
     height: 47px;
-    width: 85%;
+    width: 100%;
+    border-bottom: #20a0ff 1px solid;
 
     input {
       background: transparent;
@@ -229,22 +286,15 @@ $cursor: #fff;
       -webkit-appearance: none;
       border-radius: 0px;
       padding: 12px 5px 12px 15px;
-      color: $light_gray;
+      color: #000000;
       height: 47px;
-      caret-color: $cursor;
+      caret-color: #000000;
 
       &:-webkit-autofill {
         box-shadow: 0 0 0px 1000px $bg inset !important;
         -webkit-text-fill-color: $cursor !important;
       }
     }
-  }
-
-  .el-form-item {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
-    color: #454545;
   }
 }
 </style>
