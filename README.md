@@ -1,5 +1,9 @@
 # spring-security-mfa-vue-template
 
+该工程为 [spring-security-sample](https://github.com/ReLive27/spring-security-sample)
+项目中 [Spring Security 多因素认证（MFA）](https://github.com/ReLive27/spring-security-sample/tree/master/mfa-login) 示例的前端Vue工程。
+这个工程建立在 [vue-admin-template](https://github.com/PanJiaChen/vue-admin-template) 模板之上。
+
 ## 构建项目
 
 ```bash
