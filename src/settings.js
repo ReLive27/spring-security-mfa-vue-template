@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: 'Vue Admin Template',
+  title: 'Spring Security MFA Vue',
 
   /**
    * @type {boolean} true | false
