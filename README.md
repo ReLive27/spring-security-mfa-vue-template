@@ -23,5 +23,10 @@ npm install --registry=https://registry.npm.taobao.org
 npm run dev
 ```
 
+## 演示
+
+![演示](https://github.com/ReLive27/ReLive27.github.io/blob/main/public/static/images/blogs/mfa-demo.gif)
+
+
 
 
