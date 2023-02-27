@@ -82,21 +82,22 @@
        </div>
 
        <div class="info" v-if="active === 3">
-         <div style="text-align: center; margin: 20px auto">
-           <el-input
-             :key="passwordType"
-             v-model="loginForm.code"
-             :type="passwordType"
-             placeholder="请输入动态口令"
-             name="code"
-             tabindex="2"
-             auto-complete="on"
-             style="width: 50%"
-           />
-         </div>
+         <el-form ref="dynamicPasswordForm" :model="dynamicPasswordForm" :rules="dynamicPasswordRules" class="login-dialog" auto-complete="on">
+           <el-form-item prop="code" style="width: 50%;text-align: center; margin: 20px auto">
+             <el-input
+               :key="passwordType"
+               v-model="dynamicPasswordForm.code"
+               :type="passwordType"
+               placeholder="请输入动态口令"
+               name="code"
+               tabindex="2"
+               auto-complete="on"
+             />
+           </el-form-item>
+         </el-form>
          <div style="text-align: right; margin: 0">
            <el-button style="margin-top: 12px;" @click="previous">上一步</el-button>
-           <el-button :loading="loading" type="primary" style="margin-top: 12px;" @click.native.prevent="handleLogin">确定</el-button>
+           <el-button :loading="loading" type="primary" style="margin-top: 12px;" @click.native.prevent="handleAutoVerifyLogin">确定</el-button>
          </div>
        </div>
      </div>
@@ -104,16 +105,20 @@
 
     <el-dialog title="动态口令认证" :visible.sync="dialogDynamicPasswordVisible" width="30%" @close="handleDialogClose">
       <div class="info" style="width: 70%;margin: 0 auto">
-          <el-input
-            :key="passwordType"
-            v-model="loginForm.code"
-            :type="passwordType"
-            placeholder="请输入动态口令"
-            name="code"
-            tabindex="2"
-            auto-complete="on"
-          />
-        <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;margin-top: 10px" @click.native.prevent="handleLogin">确定</el-button>
+        <el-form ref="dynamicPasswordForm" :model="dynamicPasswordForm" :rules="dynamicPasswordRules" class="login-dialog" auto-complete="on" label-position="left">
+          <el-form-item prop="code">
+            <el-input
+                :key="passwordType"
+                v-model="dynamicPasswordForm.code"
+                :type="passwordType"
+                placeholder="请输入动态口令"
+                name="code"
+                tabindex="2"
+                auto-complete="on"
+              />
+          </el-form-item>
+          <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;margin-top: 10px" @click.native.prevent="handleAutoVerifyLogin">确定</el-button>
+        </el-form>
       </div>
 
     </el-dialog>
@@ -152,12 +157,16 @@ export default {
       loginForm: {
         username: 'admin',
         password: 'password',
+      },
+      dynamicPasswordForm: {
         code: ''
       },
       loginRules: {
         username: [{required: true, trigger: 'blur', validator: validateUsername}],
         password: [{required: true, trigger: 'blur', validator: validatePassword}],
-        code: [{required: true, trigger: 'blur', validator: validateCode}]
+      },
+      dynamicPasswordRules: {
+        code: [{required: true, trigger: 'change', validator: validateCode}]
       },
       loading: false,
       passwordType: 'password',
@@ -191,7 +200,7 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then((res) => {
+          this.$store.dispatch('user/login', Object.assign({},this.loginForm, this.dynamicPasswordForm) ).then((res) => {
             if(!res.token && res.mfa === 'bind') {
               this.qrCode = res.qrCode
               this.active = 1
@@ -218,7 +227,15 @@ export default {
       this.active--
     },
     handleDialogClose(){
-      this.loginForm.code = ''
+      this.$refs.dynamicPasswordForm.resetFields();
+    },
+    handleAutoVerifyLogin() {
+      this.$refs.dynamicPasswordForm.validate(valid => {
+        if(valid) {
+          this.handleLogin()
+        }
+      })
+
     }
   }
 }
